@@ -24,7 +24,6 @@ struct WithSecure<C>(C, bool);
 
 struct WithHttpOnly<C>(C, bool);
 
-
 // ===== impl Builder =====
 
 impl Builder<()> {
@@ -41,9 +40,7 @@ impl Builder<()> {
 impl<C: Cookie> Builder<C> {
     /// Wrap an existing `Cookie` in a builder, in order to change attributes.
     pub fn wrap(cookie: C) -> Builder<C> {
-        Builder {
-            state: Ok(cookie),
-        }
+        Builder { state: Ok(cookie) }
     }
 
     /// Set the value of this cookie.
@@ -77,8 +74,7 @@ impl<C: Cookie> Builder<C> {
             use crate::parse::Domain;
             match crate::parse::validate_domain(domain.as_ref()) {
                 Domain::AsIs => Ok(util::Delegated(WithDomain(c, domain))),
-                Domain::LeadingDot |
-                Domain::Invalid => Err(Error::invalid_domain()),
+                Domain::LeadingDot | Domain::Invalid => Err(Error::invalid_domain()),
             }
         })
     }
@@ -275,34 +271,29 @@ mod tests {
     #[test]
     fn pair_validates() {
         Builder::new("", "bar").build().expect_err("empty name");
-        Builder::new("foo=", "bar").build().expect_err("invalid name");
-        Builder::new("foo", "bar\n").build().expect_err("invalid value");
+        Builder::new("foo=", "bar")
+            .build()
+            .expect_err("invalid name");
+        Builder::new("foo", "bar\n")
+            .build()
+            .expect_err("invalid value");
     }
 
     #[test]
     fn with_value() {
         // can change the value
-        let c = Builder::new("foo", "bar")
-            .value("wat")
-            .build()
-            .unwrap();
+        let c = Builder::new("foo", "bar").value("wat").build().unwrap();
 
         assert_eq!(c.value(), "wat");
     }
 
     #[test]
     fn with_path() {
-        let c = Builder::new("foo", "bar")
-            .path("/hallo")
-            .build()
-            .unwrap();
+        let c = Builder::new("foo", "bar").path("/hallo").build().unwrap();
 
         assert_eq!(c.path(), Some("/hallo"));
 
-        let c2 = Builder::wrap(c)
-            .path("/bye")
-            .build()
-            .unwrap();
+        let c2 = Builder::wrap(c).path("/bye").build().unwrap();
 
         assert_eq!(c2.path(), Some("/bye"));
 

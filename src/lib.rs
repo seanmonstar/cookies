@@ -12,10 +12,10 @@ mod error;
 mod parse;
 mod util;
 
-use self::sealed::Sealed;
 pub use self::build::Builder;
 pub use self::error::Error;
 pub use self::parse::parse;
+use self::sealed::Sealed;
 
 /// Cookies in this crate implement this trait.
 pub trait Cookie: fmt::Debug + fmt::Display + Sealed {

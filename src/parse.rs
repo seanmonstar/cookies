@@ -26,7 +26,7 @@ struct Parsed<T> {
 type Indexed = (u16, u16);
 
 fn indexed(s: &str, i: Indexed) -> &str {
-    &s[i.0 as usize .. i.1 as usize]
+    &s[i.0 as usize..i.1 as usize]
 }
 
 fn indices(src: &str, sub: &str) -> Indexed {
@@ -87,7 +87,6 @@ impl<'t, T: AsRef<str>> Parsed<&'t T> {
 }
 */
 
-
 impl<T: AsRef<str>> fmt::Debug for Parsed<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         util::debug(self, f)
@@ -146,8 +145,8 @@ pub fn parse<T: AsRef<str>>(src: T) -> Result<impl Cookie, Error> {
             validate_value(v)?;
             cookie.name = indices(s, n);
             cookie.value = indices(s, v);
-        },
-        None => return Err(Error::invalid_name())
+        }
+        None => return Err(Error::invalid_name()),
     }
 
     // A lazy `Expires` attribute, since `Max-Age` takes precedence, we can
@@ -174,8 +173,8 @@ pub fn parse<T: AsRef<str>>(src: T) -> Result<impl Cookie, Error> {
                         // attribute may have been valid.
                         //
                         // This case is checked in unit tests below.
-                        continue
-                    },
+                        continue;
+                    }
                 };
             } else if name.eq_ignore_ascii_case("path") {
                 if !is_valid_path(value) {
@@ -238,27 +237,27 @@ pub(crate) fn validate_name(n: &str) -> Result<(), Error> {
     // | "{" | "}" | SP | HT
     for &byte in n.as_bytes() {
         match byte {
-            b'(' |
-            b')' |
-            b'<' |
-            b'>' |
-            b'@' |
-            b',' |
-            b';' |
-            b':' |
-            b'\\' |
-            b'"' |
-            b'/' |
-            b'[' |
-            b']' |
-            b'?' |
-            b'=' |
-            b'{' |
-            b'}' |
-            b' ' |
-            b'\t'|
-            0...32 |
-            127 => return Err(Error::invalid_name()),
+            b'('
+            | b')'
+            | b'<'
+            | b'>'
+            | b'@'
+            | b','
+            | b';'
+            | b':'
+            | b'\\'
+            | b'"'
+            | b'/'
+            | b'['
+            | b']'
+            | b'?'
+            | b'='
+            | b'{'
+            | b'}'
+            | b' '
+            | b'\t'
+            | 0...32
+            | 127 => return Err(Error::invalid_name()),
             _ => (),
         }
     }
@@ -272,11 +271,7 @@ pub(crate) fn validate_value(v: &str) -> Result<(), Error> {
 
     for &byte in v.as_bytes() {
         match byte {
-            0x21 |
-            0x23...0x2B |
-            0x2D...0x3A |
-            0x3C...0x5B |
-            0x5D...0x7E => (),
+            0x21 | 0x23...0x2B | 0x2D...0x3A | 0x3C...0x5B | 0x5D...0x7E => (),
             _ => return Err(Error::invalid_value()),
         }
     }
@@ -296,9 +291,7 @@ pub(crate) fn is_valid_path(p: &str) -> bool {
     // prevent CTL characters because sanity
     for &byte in p.as_bytes() {
         match byte {
-            0...32 |
-            b';' |
-            127 => return false,
+            0...32 | b';' | 127 => return false,
             _ => (),
         }
     }
@@ -317,13 +310,10 @@ pub(crate) fn validate_domain(d: &str) -> Domain {
         return Domain::Invalid;
     }
 
-
     // prevent CTL characters because sanity
     for &byte in d.as_bytes() {
         match byte {
-            0...32 |
-            b';' |
-            127 => return Domain::Invalid,
+            0...32 | b';' | 127 => return Domain::Invalid,
             _ => (),
         }
     }
