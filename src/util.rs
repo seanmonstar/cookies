@@ -3,10 +3,28 @@ use std::time::Duration;
 
 use super::{Cookie, Sealed};
 
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) enum SameSite {
+/// Value representing the `SameSite` cookie attribute.
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
+pub struct SameSite(SameSiteRepr);
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+enum SameSiteRepr {
     Lax,
     Strict,
+    __NonExhaustive,
+}
+
+impl SameSite {
+    /// `SameSite=Lax`
+    pub const LAX: SameSite = SameSite(SameSiteRepr::Lax);
+    /// `SameSite=Strict`
+    pub const STRICT: SameSite = SameSite(SameSiteRepr::Strict);
+}
+
+impl fmt::Debug for SameSite {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 pub(crate) struct Delegated<D>(pub(crate) D);
@@ -48,12 +66,8 @@ pub(crate) trait Delegate {
         self.cookie().secure()
     }
 
-    fn same_site_strict(&self) -> bool {
-        self.cookie().same_site_strict()
-    }
-
-    fn same_site_lax(&self) -> bool {
-        self.cookie().same_site_lax()
+    fn same_site(&self) -> Option<SameSite> {
+        self.cookie().same_site()
     }
 }
 
@@ -86,12 +100,8 @@ impl<D: Delegate> Cookie for Delegated<D> {
         self.0.secure()
     }
 
-    fn same_site_strict(&self) -> bool {
-        self.0.same_site_strict()
-    }
-
-    fn same_site_lax(&self) -> bool {
-        self.0.same_site_lax()
+    fn same_site(&self) -> Option<SameSite> {
+        self.0.same_site()
     }
 }
 
@@ -135,10 +145,8 @@ pub(crate) fn debug(cookie: &dyn Cookie, f: &mut fmt::Formatter) -> fmt::Result 
         builder.field("secure", &true);
     }
 
-    if cookie.same_site_strict() {
-        builder.field("same_site", &SameSite::Strict);
-    } else if cookie.same_site_lax() {
-        builder.field("same_site", &SameSite::Lax);
+    if let Some(ref ss) = cookie.same_site() {
+        builder.field("same_site", ss);
     }
 
     builder.finish()
@@ -177,10 +185,15 @@ pub(crate) fn display(cookie: &dyn Cookie, f: &mut fmt::Formatter) -> fmt::Resul
         f.write_str("; Secure")?;
     }
 
-    if cookie.same_site_strict() {
-        f.write_str("; SameSite=Strict")?;
-    } else if cookie.same_site_lax() {
-        f.write_str("; SameSite=Lax")?;
+    match cookie.same_site() {
+        Some(SameSite::STRICT) => {
+            f.write_str("; SameSite=Strict")?;
+        },
+        Some(SameSite::LAX) => {
+            f.write_str("; SameSite=Lax")?;
+        },
+        Some(_non_exhaustive) => unreachable!(),
+        None => (),
     }
 
     Ok(())

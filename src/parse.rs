@@ -68,12 +68,8 @@ impl<T: AsRef<str>> Cookie for Parsed<T> {
         self.secure
     }
 
-    fn same_site_strict(&self) -> bool {
-        self.same_site == Some(SameSite::Strict)
-    }
-
-    fn same_site_lax(&self) -> bool {
-        self.same_site == Some(SameSite::Lax)
+    fn same_site(&self) -> Option<SameSite> {
+        self.same_site
     }
 }
 
@@ -191,9 +187,9 @@ pub fn parse<T: AsRef<str>>(src: T) -> Result<impl Cookie, Error> {
                 expires = Some(value);
             } else if name.eq_ignore_ascii_case("samesite") {
                 cookie.same_site = if value.eq_ignore_ascii_case("lax") {
-                    Some(SameSite::Lax)
+                    Some(SameSite::LAX)
                 } else if value.eq_ignore_ascii_case("strict") {
-                    Some(SameSite::Strict)
+                    Some(SameSite::STRICT)
                 } else {
                     // unknown SameSite, skip as mandated by spec
                     continue;
@@ -256,7 +252,7 @@ pub(crate) fn validate_name(n: &str) -> Result<(), Error> {
             | b'}'
             | b' '
             | b'\t'
-            | 0...32
+            | 0..=32
             | 127 => return Err(Error::invalid_name()),
             _ => (),
         }
@@ -271,7 +267,7 @@ pub(crate) fn validate_value(v: &str) -> Result<(), Error> {
 
     for &byte in v.as_bytes() {
         match byte {
-            0x21 | 0x23...0x2B | 0x2D...0x3A | 0x3C...0x5B | 0x5D...0x7E => (),
+            0x21 | 0x23..=0x2B | 0x2D..=0x3A | 0x3C..=0x5B | 0x5D..=0x7E => (),
             _ => return Err(Error::invalid_value()),
         }
     }
@@ -291,7 +287,7 @@ pub(crate) fn is_valid_path(p: &str) -> bool {
     // prevent CTL characters because sanity
     for &byte in p.as_bytes() {
         match byte {
-            0...32 | b';' | 127 => return false,
+            0..=32 | b';' | 127 => return false,
             _ => (),
         }
     }
@@ -313,7 +309,7 @@ pub(crate) fn validate_domain(d: &str) -> Domain {
     // prevent CTL characters because sanity
     for &byte in d.as_bytes() {
         match byte {
-            0...32 | b';' | 127 => return Domain::Invalid,
+            0..=32 | b';' | 127 => return Domain::Invalid,
             _ => (),
         }
     }
@@ -419,7 +415,14 @@ mod tests {
     fn samesite_bogus_value() {
         // SameSite spec says we should ignore the attribute completely
         let c = parse("foo=bar; samesite=wat").unwrap();
-        assert!(!c.same_site_strict());
-        assert!(!c.same_site_lax());
+        assert_eq!(c.same_site(), None);
+    }
+
+    #[test]
+    fn parsed_to_boxed() {
+        let c = parse("foo=bar").unwrap();
+        let bc = Box::new(c) as Box<dyn Cookie>;
+        assert_eq!(bc.name(), "foo");
+        assert_eq!(bc.value(), "bar");
     }
 }

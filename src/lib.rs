@@ -23,6 +23,8 @@ mod util;
 pub use self::build::Builder;
 pub use self::error::Error;
 pub use self::parse::parse;
+pub use self::util::SameSite;
+
 use self::sealed::Sealed;
 
 /// Cookies in this crate implement this trait.
@@ -48,11 +50,8 @@ pub trait Cookie: fmt::Debug + fmt::Display + Sealed {
     /// Get if the `Secure` attribute was on this cookie.
     fn secure(&self) -> bool;
 
-    /// Get if the `SameSite=Strict` attribute was on this cookie.
-    fn same_site_strict(&self) -> bool;
-
-    /// Get if the `SameSite=Lax` attribute was on this cookie.
-    fn same_site_lax(&self) -> bool;
+    /// Get the `SameSite`, if set.
+    fn same_site(&self) -> Option<SameSite>;
 }
 
 mod sealed {

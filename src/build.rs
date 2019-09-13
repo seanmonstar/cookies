@@ -1,7 +1,7 @@
 use std::fmt;
 use std::time::Duration;
 
-use super::{Cookie, Error, Sealed};
+use super::{Cookie, Error, SameSite, Sealed};
 use crate::util;
 
 /// Configure an HTTP cookie with the builder pattern.
@@ -148,12 +148,8 @@ impl<N: AsRef<str>, V: AsRef<str>> Cookie for Pair<N, V> {
         false
     }
 
-    fn same_site_strict(&self) -> bool {
-        false
-    }
-
-    fn same_site_lax(&self) -> bool {
-        false
+    fn same_site(&self) -> Option<SameSite> {
+        None
     }
 }
 
@@ -264,8 +260,7 @@ mod tests {
         assert_eq!(c.max_age(), None);
         assert!(!c.http_only());
         assert!(!c.secure());
-        assert!(!c.same_site_strict());
-        assert!(!c.same_site_lax());
+        assert_eq!(c.same_site(), None);
     }
 
     #[test]
