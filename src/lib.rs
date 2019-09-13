@@ -2,7 +2,15 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
-//! cookies
+//! # cookies
+//!
+//! HTTP cookie parsing and building.
+//!
+//! # The `Cookie` trait
+//!
+//! This crate tries something a little different. Instead of representing
+//! a cookie with a single `struct`, the *concept* of a cookie is instead
+//! exposed as a `trait`.
 
 use std::fmt;
 use std::time::Duration;
