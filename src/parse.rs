@@ -250,7 +250,7 @@ pub(crate) fn validate_name(n: &str) -> Result<(), Error> {
             | b'='
             | b'{'
             | b'}'
-            | b' '
+            //| b' ' covered in 0..=32
             | b'\t'
             | 0..=32
             | 127 => return Err(Error::invalid_name()),
@@ -336,6 +336,7 @@ mod tests {
     fn invalid_name() {
         parse("=bar").expect_err("empty name");
         parse("f()()=bar").expect_err("parens in name");
+        parse("f o o=bar").expect_err("space in name");
     }
 
     #[test]
